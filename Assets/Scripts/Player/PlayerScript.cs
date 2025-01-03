@@ -1,11 +1,15 @@
+using UnityEditor.Tilemaps;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerScript: MonoBehaviour
 {
     private Vector2 startPoint; // 드래그 시작 위치
     private Vector2 endPoint;   // 드래그 종료 위치
     private Rigidbody2D rb;     // Rigidbody2D 참조
     private SpriteRenderer spriteRenderer;
+
+    bool isPlayerPowerUp;
+
     public float frictionCoefficient; 
     public float bigFrictionCoefficient; 
     public float nowSpeed;
@@ -13,7 +17,7 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] private float launchForce; // 발사 힘
 
-    private void Start()
+    private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
@@ -68,4 +72,30 @@ public class PlayerController : MonoBehaviour
         else
             rb.linearVelocity = Vector2.zero;
     }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (!isPlayerPowerUp) // 플레이어가 파워업 상태가 아닌 경우
+        {
+            GameStateManager.Instance.GameOver(); // 게임 종료 처리
+        }
+        else // 파워업 상태인 경우
+        {
+            var obstacleScript = collision.gameObject.GetComponent<IObstacle>();
+            // 충돌한 객체에서 IObstacle 인터페이스를 구현한 스크립트를 가져옴
+
+            if (obstacleScript != null) // 가져온 스크립트가 존재하면
+            {
+                obstacleScript.DestroyEffect(); // 인터페이스 메서드 호출
+                Debug.Log("obstacleScript.DestroyEffect(); // 인터페이스 메서드 호출");
+            }
+            else // 인터페이스를 구현하지 않은 객체일 경우
+            {
+                Debug.LogWarning("null"); // 경고 메시지 출력
+            }
+
+            Destroy(collision.gameObject); // 충돌한 객체 제거
+        }
+    }
+
 }
